@@ -82,6 +82,7 @@ import de.charlex.compose.material3.HtmlText
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import com.swordfish.lemuroid.lib.saves.StatesManager
+import com.swordfish.lemuroid.lib.saves.SaveProfilesManager
 import com.swordfish.lemuroid.lib.saves.SavesManager
 import com.swordfish.lemuroid.lib.saves.StatesPreviewManager
 import com.swordfish.lemuroid.lib.storage.StorageProviderRegistry
@@ -125,6 +126,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
     @Inject
     lateinit var storageProviderRegistry: Lazy<StorageProviderRegistry>
+
+    @Inject
+    lateinit var saveProfilesManager: SaveProfilesManager
 
     private val reviewManager = ReviewManager()
 
@@ -252,6 +256,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                             statesManager,
                                             savesManager,
                                             statesPreviewManager,
+                                            saveProfilesManager,
                                         ),
                                 ),
                             onGamePlay = onGameClick,

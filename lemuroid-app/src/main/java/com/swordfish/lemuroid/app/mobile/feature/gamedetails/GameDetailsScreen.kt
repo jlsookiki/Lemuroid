@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -30,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -38,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -322,6 +326,9 @@ private fun SavesTab(
             }
         }
 
+        SectionLabel(stringResource(R.string.game_details_profiles))
+        ProfilesCard(state = state, viewModel = viewModel)
+
         if (state.statesSupported) {
             SectionLabel(stringResource(R.string.game_details_states))
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -342,6 +349,93 @@ private fun SavesTab(
             }
         }
     }
+}
+
+@Composable
+private fun ProfilesCard(
+    state: GameDetailsViewModel.UIState,
+    viewModel: GameDetailsViewModel,
+) {
+    var showNewProfileDialog by remember { mutableStateOf(false) }
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            state.profiles.forEach { profile ->
+                val isActive = profile == state.activeProfile
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = profile,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (isActive) {
+                            Text(
+                                text = stringResource(R.string.game_details_profile_active),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = { viewModel.activateProfile(profile) },
+                        enabled = !isActive && !state.busy,
+                    ) { Text(stringResource(R.string.game_details_profile_use)) }
+                }
+            }
+            Text(
+                text = stringResource(R.string.game_details_profile_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(onClick = { showNewProfileDialog = true }, enabled = !state.busy) {
+                Icon(Icons.Filled.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.game_details_profile_new))
+            }
+        }
+    }
+
+    if (showNewProfileDialog) {
+        NewProfileDialog(
+            onDismiss = { showNewProfileDialog = false },
+            onCreate = { name ->
+                showNewProfileDialog = false
+                viewModel.createProfile(name)
+            },
+        )
+    }
+}
+
+@Composable
+private fun NewProfileDialog(
+    onDismiss: () -> Unit,
+    onCreate: (String) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.game_details_profile_new)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                singleLine = true,
+                label = { Text(stringResource(R.string.game_details_profile_name)) },
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onCreate(name) }, enabled = name.isNotBlank()) {
+                Text(stringResource(R.string.game_details_profile_create))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_action)) }
+        },
+    )
 }
 
 @Composable

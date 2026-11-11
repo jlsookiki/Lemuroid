@@ -52,6 +52,12 @@ interface StorageProvider {
         relativePath: String,
     ): InputStream? = null
 
+    /** Lists file names inside a folder relative to the game's own folder, e.g. "saves". */
+    fun listSiblings(
+        game: Game,
+        relativeDirectory: String,
+    ): List<String> = emptyList()
+
     /** Writes a file relative to the game's own folder, creating intermediate folders. */
     fun writeSibling(
         game: Game,

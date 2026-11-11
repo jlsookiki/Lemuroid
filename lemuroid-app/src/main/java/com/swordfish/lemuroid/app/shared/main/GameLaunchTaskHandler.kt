@@ -9,13 +9,18 @@ import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
 import com.swordfish.lemuroid.app.shared.savesync.SaveSyncWork
 import com.swordfish.lemuroid.app.shared.storage.cache.CacheCleanerWork
 import com.swordfish.lemuroid.ext.feature.review.ReviewManager
+import com.swordfish.lemuroid.lib.core.CoresSelection
+import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.saves.SaveProfilesManager
 import kotlinx.coroutines.delay
 
 class GameLaunchTaskHandler(
     private val reviewManager: ReviewManager,
     private val retrogradeDb: RetrogradeDatabase,
+    private val coresSelection: CoresSelection,
+    private val saveProfilesManager: SaveProfilesManager,
 ) {
     fun handleGameStart(context: Context) {
         cancelBackgroundWork(context)
@@ -32,6 +37,15 @@ class GameLaunchTaskHandler(
     ) {
         handleGameStart(context)
         updateGamePlayedTimestamp(game)
+        mirrorActiveSaveProfile(game)
+    }
+
+    /** Keeps the active profile's file next to the ROM current with the previous session's save. */
+    private suspend fun mirrorActiveSaveProfile(game: Game) {
+        runCatching {
+            val coreConfig = coresSelection.getCoreConfigForSystem(GameSystem.findById(game.systemId))
+            saveProfilesManager.mirrorActive(game, coreConfig)
+        }
     }
 
     suspend fun handleGameFinish(

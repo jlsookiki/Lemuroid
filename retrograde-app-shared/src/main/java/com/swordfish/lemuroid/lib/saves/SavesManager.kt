@@ -48,6 +48,12 @@ class SavesManager(private val directoriesManager: DirectoriesManager) {
         }
     }
 
+    suspend fun deleteSaveRAM(game: Game) {
+        withContext(Dispatchers.IO) {
+            runCatching { getSaveFile(getSaveRAMFileName(game)).delete() }
+        }
+    }
+
     suspend fun getSaveRAMInfo(game: Game): SaveInfo {
         return withContext(Dispatchers.IO) {
             val saveFile = getSaveFile(getSaveRAMFileName(game))

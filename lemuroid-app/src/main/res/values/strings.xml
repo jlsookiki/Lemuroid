@@ -28,6 +28,14 @@
     <string name="game_details_empty_slot">Empty</string>
     <string name="game_details_set_resume_point">Resume here</string>
     <string name="game_details_achievements_placeholder">RetroAchievements are not supported yet.</string>
+    <string name="game_details_profiles">Save profiles</string>
+    <string name="game_details_profile_active">Active</string>
+    <string name="game_details_profile_use">Use</string>
+    <string name="game_details_profile_new">New profile</string>
+    <string name="game_details_profile_name">Profile name</string>
+    <string name="game_details_profile_hint">Switching profiles clears the resume point. The current save is kept in its own profile.</string>
+    <string name="game_details_profile_create">Create</string>
+    <string name="cancel_action">Cancel</string>
     <string name="game_details_action_done">Done</string>
     <string name="game_details_action_failed">That didn\'t work</string>
     <string name="title_search">Search</string>

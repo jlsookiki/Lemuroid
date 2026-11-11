@@ -71,6 +71,14 @@ class LocalStorageProvider(
         return if (file.isFile) file.inputStream() else null
     }
 
+    override fun listSiblings(
+        game: Game,
+        relativeDirectory: String,
+    ): List<String> {
+        val parent = Uri.parse(game.fileUri).path?.let { File(it).parentFile } ?: return emptyList()
+        return File(parent, relativeDirectory).listFiles()?.filter { it.isFile }?.map { it.name } ?: emptyList()
+    }
+
     override fun writeSibling(
         game: Game,
         relativePath: String,

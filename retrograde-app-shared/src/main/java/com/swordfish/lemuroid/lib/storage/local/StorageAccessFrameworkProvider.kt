@@ -122,6 +122,30 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
         }.onFailure { android.util.Log.e(SIBLING_TAG, "writeSibling failed", it) }.getOrDefault(false)
     }
 
+    override fun listSiblings(
+        game: Game,
+        relativeDirectory: String,
+    ): List<String> {
+        val treeUri = getExternalFolder()?.let { Uri.parse(it) } ?: return emptyList()
+        val documentId = runCatching { DocumentsContract.getDocumentId(Uri.parse(game.fileUri)) }.getOrNull() ?: return emptyList()
+        var directoryId = parentDocumentId(documentId)
+        relativeDirectory.split('/').filter { it.isNotEmpty() }.forEach { directoryId = joinDocumentId(directoryId, it) }
+
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, directoryId)
+        val projection = arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE)
+        return runCatching {
+            context.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+                val names = mutableListOf<String>()
+                while (cursor.moveToNext()) {
+                    if (cursor.getString(1) != DocumentsContract.Document.MIME_TYPE_DIR) {
+                        names.add(cursor.getString(0))
+                    }
+                }
+                names
+            } ?: emptyList()
+        }.getOrDefault(emptyList())
+    }
+
     private fun siblingUri(
         game: Game,
         relativePath: String,

@@ -58,6 +58,7 @@ import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
 import com.swordfish.lemuroid.lib.migration.DesmumeMigrationHandler
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import com.swordfish.lemuroid.lib.saves.SavesCoherencyEngine
+import com.swordfish.lemuroid.lib.saves.SaveProfilesManager
 import com.swordfish.lemuroid.lib.saves.SavesManager
 import com.swordfish.lemuroid.lib.saves.StatesManager
 import com.swordfish.lemuroid.lib.saves.StatesPreviewManager
@@ -331,8 +332,21 @@ abstract class LemuroidApplicationModule {
         @Provides
         @PerApp
         @JvmStatic
-        fun postGameHandler(retrogradeDatabase: RetrogradeDatabase) =
-            GameLaunchTaskHandler(ReviewManager(), retrogradeDatabase)
+        fun postGameHandler(
+            retrogradeDatabase: RetrogradeDatabase,
+            coresSelection: CoresSelection,
+            saveProfilesManager: SaveProfilesManager,
+        ) = GameLaunchTaskHandler(ReviewManager(), retrogradeDatabase, coresSelection, saveProfilesManager)
+
+        @Provides
+        @PerApp
+        @JvmStatic
+        fun saveProfilesManager(
+            context: Context,
+            savesManager: SavesManager,
+            statesManager: StatesManager,
+            storageProviderRegistry: Lazy<StorageProviderRegistry>,
+        ) = SaveProfilesManager(context, savesManager, statesManager, storageProviderRegistry)
 
         @Provides
         @PerApp

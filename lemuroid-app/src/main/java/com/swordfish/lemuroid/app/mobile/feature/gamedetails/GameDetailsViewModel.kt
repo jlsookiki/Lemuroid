@@ -14,6 +14,7 @@ import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameSidecar
 import com.swordfish.lemuroid.lib.library.metadata.GameSidecarParser
 import com.swordfish.lemuroid.lib.saves.SaveInfo
+import com.swordfish.lemuroid.lib.saves.SaveProfilesManager
 import com.swordfish.lemuroid.lib.saves.SavesManager
 import com.swordfish.lemuroid.lib.saves.StatesManager
 import com.swordfish.lemuroid.lib.saves.StatesPreviewManager
@@ -34,6 +35,7 @@ class GameDetailsViewModel(
     private val statesManager: StatesManager,
     private val savesManager: SavesManager,
     private val statesPreviewManager: StatesPreviewManager,
+    private val saveProfilesManager: SaveProfilesManager,
 ) : ViewModel() {
     class Factory(
         private val appContext: Context,
@@ -44,6 +46,7 @@ class GameDetailsViewModel(
         private val statesManager: StatesManager,
         private val savesManager: SavesManager,
         private val statesPreviewManager: StatesPreviewManager,
+        private val saveProfilesManager: SaveProfilesManager,
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return GameDetailsViewModel(
@@ -55,6 +58,7 @@ class GameDetailsViewModel(
                 statesManager,
                 savesManager,
                 statesPreviewManager,
+                saveProfilesManager,
             ) as T
         }
     }
@@ -74,6 +78,8 @@ class GameDetailsViewModel(
         val slots: List<StateSlot> = emptyList(),
         val batterySave: SaveInfo = SaveInfo(false, 0),
         val exportedBatterySaveExists: Boolean = false,
+        val activeProfile: String = SaveProfilesManager.DEFAULT_PROFILE,
+        val profiles: List<String> = emptyList(),
         val busy: Boolean = false,
         val message: String? = null,
     )
@@ -107,19 +113,19 @@ class GameDetailsViewModel(
     }
 
     fun exportBatterySave() {
-        runAction { game, coreConfig ->
-            val data = savesManager.getSaveRAM(game, coreConfig) ?: return@runAction false
-            storageProviderRegistry.get().getProvider(game).writeSibling(game, exportedSavePath(game), data)
-        }
+        runAction { game, coreConfig -> saveProfilesManager.mirrorActive(game, coreConfig) }
     }
 
     fun importBatterySave() {
-        runAction { game, _ ->
-            val provider = storageProviderRegistry.get().getProvider(game)
-            val data = provider.openSibling(game, exportedSavePath(game))?.use { it.readBytes() } ?: return@runAction false
-            savesManager.setSaveRAM(game, data)
-            true
-        }
+        runAction { game, coreConfig -> saveProfilesManager.restoreActive(game, coreConfig) }
+    }
+
+    fun activateProfile(profile: String) {
+        runAction { game, coreConfig -> saveProfilesManager.activate(game, coreConfig, profile) }
+    }
+
+    fun createProfile(profile: String) {
+        runAction { game, coreConfig -> saveProfilesManager.create(game, coreConfig, profile) }
     }
 
     fun toggleFavorite() {
@@ -174,9 +180,9 @@ class GameDetailsViewModel(
                 StateSlot(index, info, preview)
             }
 
-        val exportedExists =
-            runCatching { provider.openSibling(game, exportedSavePath(game))?.use { true } ?: false }
-                .getOrDefault(false)
+        val activeProfile = saveProfilesManager.activeProfile(game)
+        val exportedExists = saveProfilesManager.profileFileExists(game, activeProfile)
+        val profiles = saveProfilesManager.listProfiles(game)
 
         return UIState(
             game = game,
@@ -187,11 +193,9 @@ class GameDetailsViewModel(
             slots = slots,
             batterySave = savesManager.getSaveRAMInfo(game),
             exportedBatterySaveExists = exportedExists,
+            activeProfile = activeProfile,
+            profiles = profiles,
         )
-    }
-
-    private fun exportedSavePath(game: Game): String {
-        return "saves/" + game.fileName.substringBeforeLast('.') + ".srm"
     }
 
     companion object {

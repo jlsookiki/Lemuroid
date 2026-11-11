@@ -59,6 +59,15 @@ class StatesManager(private val directoriesManager: DirectoriesManager) {
         setSaveState(getAutoSaveFileName(game), coreID.coreName, saveState)
     }
 
+    suspend fun deleteAutoSave(
+        game: Game,
+        coreID: CoreID,
+    ) = withContext(Dispatchers.IO) {
+        val fileName = getAutoSaveFileName(game)
+        runCatching { getStateFile(fileName, coreID.coreName).delete() }
+        runCatching { getMetadataStateFile(fileName, coreID.coreName).delete() }
+    }
+
     suspend fun getSavedSlotsInfo(
         game: Game,
         coreID: CoreID,
