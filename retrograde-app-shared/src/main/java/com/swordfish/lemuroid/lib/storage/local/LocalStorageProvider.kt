@@ -28,6 +28,7 @@ import com.swordfish.lemuroid.common.kotlin.isZipped
 import com.swordfish.lemuroid.lib.R
 import com.swordfish.lemuroid.lib.library.db.entity.DataFile
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.library.metadata.LocalCovers
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import com.swordfish.lemuroid.lib.storage.BaseStorageFile
 import com.swordfish.lemuroid.lib.storage.DirectoriesManager
@@ -59,6 +60,15 @@ class LocalStorageProvider(
 
     override fun getStorageFile(baseStorageFile: BaseStorageFile): StorageFile? {
         return DocumentFileParser.parseDocumentFile(context, baseStorageFile)
+    }
+
+    override fun findLocalCover(baseStorageFile: BaseStorageFile): Uri? {
+        val parent = baseStorageFile.uri.path?.let { File(it).parentFile } ?: return null
+        return LocalCovers.candidateRelativePaths(baseStorageFile.extensionlessName)
+            .asSequence()
+            .map { File(parent, it) }
+            .firstOrNull { it.isFile }
+            ?.toUri()
     }
 
     private fun getExternalFolder(): File? {

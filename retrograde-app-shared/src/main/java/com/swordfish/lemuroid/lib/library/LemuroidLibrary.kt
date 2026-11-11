@@ -26,6 +26,7 @@ import com.swordfish.lemuroid.lib.library.db.entity.DataFile
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
+import com.swordfish.lemuroid.lib.library.metadata.LocalCovers
 import com.swordfish.lemuroid.lib.storage.BaseStorageFile
 import com.swordfish.lemuroid.lib.storage.GroupedStorageFiles
 import com.swordfish.lemuroid.lib.storage.RomFiles
@@ -135,7 +136,7 @@ class LemuroidLibrary(
     ) {
         val updatedGames =
             entries
-                .map { it.game.copy(lastIndexedAt = startedAtMs) }
+                .map { it.game.copy(lastIndexedAt = startedAtMs, coverFrontUrl = refreshCover(it)) }
 
         updatedGames
             .forEach { Timber.d("Updating game: $it") }
@@ -240,7 +241,7 @@ class LemuroidLibrary(
                 .mapNotNull { safeStorageFile(provider, it) }
                 .mapNotNull { storageFile ->
                     val metadata = metadataProvider.retrieveMetadata(storageFile)
-                    convertGameMetadataToGame(groupedStorageFile, storageFile, metadata, startedAtMs)
+                    convertGameMetadataToGame(groupedStorageFile, storageFile, metadata, startedAtMs, provider)
                 }
                 .firstOrNull()
 
@@ -280,10 +281,13 @@ class LemuroidLibrary(
         storageFile: StorageFile,
         gameMetadata: GameMetadata?,
         lastIndexedAt: Long,
+        provider: StorageProvider,
     ): Game? {
         if (gameMetadata == null) {
             return null
         }
+
+        val localCover = findLocalCover(provider, groupedStorageFile)
 
         val gameSystem = GameSystem.findById(gameMetadata.system!!)
 
@@ -301,9 +305,36 @@ class LemuroidLibrary(
             title = gameMetadata.name ?: groupedStorageFile.primaryFile.name,
             systemId = gameSystem.id.dbname,
             developer = gameMetadata.developer,
-            coverFrontUrl = gameMetadata.thumbnail,
+            coverFrontUrl = localCover ?: gameMetadata.thumbnail,
             lastIndexedAt = lastIndexedAt,
         )
+    }
+
+    private fun findLocalCover(
+        provider: StorageProvider,
+        groupedStorageFile: GroupedStorageFiles,
+    ): String? {
+        return runCatching { provider.findLocalCover(groupedStorageFile.primaryFile) }
+            .getOrNull()
+            ?.toString()
+    }
+
+    /**
+     * Local covers can appear or disappear between scans, so they are re-evaluated for
+     * games already in the database. Remote thumbnails are left untouched.
+     */
+    private fun refreshCover(entry: ScanEntry.GameFile): String? {
+        val provider =
+            runCatching { storageProviderRegistry.get().getProvider(entry.game) }
+                .getOrNull()
+                ?: return entry.game.coverFrontUrl
+
+        val localCover = findLocalCover(provider, entry.file)
+        return when {
+            localCover != null -> localCover
+            LocalCovers.isLocalUri(entry.game.coverFrontUrl) -> null
+            else -> entry.game.coverFrontUrl
+        }
     }
 
     private fun removeDeletedDataFiles(startedAtMs: Long) {

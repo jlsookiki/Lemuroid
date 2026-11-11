@@ -67,6 +67,18 @@ interface GameDao {
     @Query("SELECT * FROM games WHERE systemId IN (:systemIds) ORDER BY title ASC, id DESC")
     fun selectBySystems(systemIds: List<String>): PagingSource<Int, Game>
 
+    @Query("SELECT * FROM games ORDER BY title ASC, id DESC")
+    fun selectAllSortedByTitle(): Flow<List<Game>>
+
+    @Query("SELECT * FROM games WHERE systemId IN (:systemIds) ORDER BY title ASC, id DESC")
+    fun selectBySystemsSortedByTitle(systemIds: List<String>): Flow<List<Game>>
+
+    @Query("SELECT * FROM games WHERE isFavorite = 1 ORDER BY title ASC, id DESC")
+    fun selectFavoritesSortedByTitle(): Flow<List<Game>>
+
+    @Query("SELECT * FROM games WHERE lastPlayedAt IS NOT NULL ORDER BY lastPlayedAt DESC LIMIT :limit")
+    fun selectFirstRecents(limit: Int): Flow<List<Game>>
+
     @Query("SELECT DISTINCT systemId FROM games ORDER BY systemId ASC")
     suspend fun selectSystems(): List<String>
 

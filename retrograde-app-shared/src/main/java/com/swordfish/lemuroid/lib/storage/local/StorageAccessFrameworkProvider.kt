@@ -11,6 +11,7 @@ import com.swordfish.lemuroid.common.kotlin.writeToFile
 import com.swordfish.lemuroid.lib.R
 import com.swordfish.lemuroid.lib.library.db.entity.DataFile
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.library.metadata.LocalCovers
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import com.swordfish.lemuroid.lib.storage.BaseStorageFile
 import com.swordfish.lemuroid.lib.storage.RomFiles
@@ -43,6 +44,32 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
 
     override fun getStorageFile(baseStorageFile: BaseStorageFile): StorageFile? {
         return DocumentFileParser.parseDocumentFile(context, baseStorageFile)
+    }
+
+    override fun findLocalCover(baseStorageFile: BaseStorageFile): Uri? {
+        val treeUri = getExternalFolder()?.let { Uri.parse(it) } ?: return null
+        val documentId = runCatching { DocumentsContract.getDocumentId(baseStorageFile.uri) }.getOrNull() ?: return null
+
+        // Document ids of the external storage provider look like "primary:ROMs/gba/Game.gba".
+        val separator = documentId.lastIndexOf('/')
+        val parentPrefix =
+            if (separator >= 0) {
+                documentId.substring(0, separator + 1)
+            } else {
+                documentId.substringBefore(':') + ":"
+            }
+
+        return LocalCovers.candidateRelativePaths(baseStorageFile.extensionlessName)
+            .asSequence()
+            .map { DocumentsContract.buildDocumentUriUsingTree(treeUri, parentPrefix + it) }
+            .firstOrNull { documentExists(it) }
+    }
+
+    private fun documentExists(uri: Uri): Boolean {
+        val projection = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+        return runCatching {
+            context.contentResolver.query(uri, projection, null, null, null)?.use { it.count > 0 } ?: false
+        }.getOrDefault(false)
     }
 
     private fun getExternalFolder(): String? {

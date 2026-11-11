@@ -7,12 +7,14 @@ import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
 import com.swordfish.lemuroid.app.shared.covers.CoverUtils
 import com.swordfish.lemuroid.app.shared.deeplink.DeepLink
 import com.swordfish.lemuroid.common.bitmap.cropToSquare
 import com.swordfish.lemuroid.common.bitmap.toBitmap
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.library.metadata.LocalCovers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -51,8 +53,14 @@ class ShortcutsGenerator(
         withContext(Dispatchers.IO) {
             val result =
                 runCatching {
-                    val response = thumbnailsApi.downloadThumbnail(game.coverFrontUrl!!)
-                    BitmapFactory.decodeStream(response.body()).cropToSquare()
+                    val coverUrl = game.coverFrontUrl!!
+                    val stream =
+                        if (LocalCovers.isLocalUri(coverUrl)) {
+                            appContext.contentResolver.openInputStream(Uri.parse(coverUrl))
+                        } else {
+                            thumbnailsApi.downloadThumbnail(coverUrl).body()
+                        }
+                    BitmapFactory.decodeStream(stream).cropToSquare()
                 }
             result.getOrElse { retrieveFallbackBitmap(game) }
         }

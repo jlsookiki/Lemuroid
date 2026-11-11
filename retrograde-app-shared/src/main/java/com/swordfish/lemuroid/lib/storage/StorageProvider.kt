@@ -43,6 +43,9 @@ interface StorageProvider {
 
     fun getStorageFile(baseStorageFile: BaseStorageFile): StorageFile?
 
+    /** Returns a cover image stored next to the game (see LocalCovers), if any. */
+    fun findLocalCover(baseStorageFile: BaseStorageFile): Uri? = null
+
     fun getGameRomFiles(
         game: Game,
         dataFiles: List<DataFile>,

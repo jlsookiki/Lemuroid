@@ -31,6 +31,8 @@ import com.swordfish.lemuroid.app.mobile.feature.favorites.FavoritesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesScreen
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
+import com.swordfish.lemuroid.app.mobile.feature.library.LibraryScreen
+import com.swordfish.lemuroid.app.mobile.feature.library.LibraryViewModel
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeViewModel
 import com.swordfish.lemuroid.app.mobile.feature.search.SearchScreen
 import com.swordfish.lemuroid.app.mobile.feature.search.SearchViewModel
@@ -134,7 +136,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             val currentRoute =
                 currentDestination?.route
                     ?.let { MainRoute.findByRoute(it) }
-                    ?: MainRoute.HOME
+                    ?: MainRoute.LIBRARY
 
             val infoDialogDisplayed =
                 remember {
@@ -186,8 +188,19 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
                     navController = navController,
-                    startDestination = MainRoute.HOME.route,
+                    startDestination = MainRoute.LIBRARY.route,
                 ) {
+                    composable(MainRoute.LIBRARY) {
+                        LibraryScreen(
+                            modifier = Modifier.padding(padding),
+                            viewModel =
+                                viewModel(
+                                    factory = LibraryViewModel.Factory(applicationContext, retrogradeDb),
+                                ),
+                            onGameClick = onGameClick,
+                            onGameLongClick = onGameLongClick,
+                        )
+                    }
                     composable(MainRoute.HOME) {
                         HomeScreen(
                             modifier = Modifier.padding(padding),
