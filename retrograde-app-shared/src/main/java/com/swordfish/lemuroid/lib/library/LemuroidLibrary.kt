@@ -26,7 +26,6 @@ import com.swordfish.lemuroid.lib.library.db.entity.DataFile
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadata
 import com.swordfish.lemuroid.lib.library.metadata.GameMetadataProvider
-import com.swordfish.lemuroid.lib.library.metadata.LocalCovers
 import com.swordfish.lemuroid.lib.storage.BaseStorageFile
 import com.swordfish.lemuroid.lib.storage.GroupedStorageFiles
 import com.swordfish.lemuroid.lib.storage.RomFiles
@@ -320,8 +319,10 @@ class LemuroidLibrary(
     }
 
     /**
-     * Local covers can appear or disappear between scans, so they are re-evaluated for
-     * games already in the database. Remote thumbnails are left untouched.
+     * Local covers can be added between scans, so they are re-evaluated for games already in
+     * the database. A lookup that finds nothing keeps whatever the game already had: the scan
+     * that runs right after boot can race the storage provider, and a missing file simply falls
+     * back to the placeholder at display time.
      */
     private fun refreshCover(entry: ScanEntry.GameFile): String? {
         val provider =
@@ -329,12 +330,7 @@ class LemuroidLibrary(
                 .getOrNull()
                 ?: return entry.game.coverFrontUrl
 
-        val localCover = findLocalCover(provider, entry.file)
-        return when {
-            localCover != null -> localCover
-            LocalCovers.isLocalUri(entry.game.coverFrontUrl) -> null
-            else -> entry.game.coverFrontUrl
-        }
+        return findLocalCover(provider, entry.file) ?: entry.game.coverFrontUrl
     }
 
     private fun removeDeletedDataFiles(startedAtMs: Long) {
