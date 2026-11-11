@@ -22,15 +22,24 @@ class GameLauncher(
         loadSave: Boolean,
         leanback: Boolean,
     ): Boolean {
-        if (GameProcessLock.isHeldByAnotherProcess(activity.applicationContext)) {
-            activity.displayToast(R.string.game_process_another_game_running)
-            return false
-        }
+        val appContext = activity.applicationContext
+        val runningGameId = GameProcessController.runningGameId(appContext)
+        val resumeRunningGame = runningGameId == game.id && loadSave
 
         GlobalScope.launch {
+            if (!resumeRunningGame && GameProcessController.isGameRunning(appContext)) {
+                val stopped = GameProcessController.stopRunningGame(appContext)
+                if (!stopped) {
+                    activity.runOnUiThread { activity.displayToast(R.string.game_process_another_game_running) }
+                    return@launch
+                }
+            }
+
             val system = GameSystem.findById(game.systemId)
             val coreConfig = coresSelection.getCoreConfigForSystem(system)
-            gameLaunchTaskHandler.handleGameStart(activity.applicationContext, game)
+            if (!resumeRunningGame) {
+                gameLaunchTaskHandler.handleGameStart(appContext, game)
+            }
             BaseGameActivity.launchGame(activity, coreConfig, game, loadSave, leanback)
         }
 

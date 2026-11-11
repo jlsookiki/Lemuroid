@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.swordfish.lemuroid.app.shared.game.GameProcessController
 import com.swordfish.lemuroid.app.shared.gamemenu.GameMenuHelper
 import com.swordfish.lemuroid.lib.core.CoresSelection
 import com.swordfish.lemuroid.lib.library.GameSystem
@@ -140,6 +141,8 @@ class GameDetailsViewModel(
         val game = uiState.value.game ?: return
         viewModelScope.launch(Dispatchers.IO) {
             uiState.value = uiState.value.copy(busy = true)
+            // A backgrounded game holds the battery save in memory; let it save and quit first.
+            GameProcessController.stopRunningGame(appContext)
             val coreConfig = coresSelection.getCoreConfigForSystem(GameSystem.findById(game.systemId))
             val succeeded =
                 runCatching { action(game, coreConfig) }

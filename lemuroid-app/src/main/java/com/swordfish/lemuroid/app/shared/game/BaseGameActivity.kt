@@ -2,6 +2,12 @@ package com.swordfish.lemuroid.app.shared.game
 
 import android.app.Activity
 import android.content.Intent
+import com.swordfish.lemuroid.R
+import com.swordfish.lemuroid.app.shared.gamecrash.GameCrashActivity
+import androidx.core.content.ContextCompat
+import android.content.IntentFilter
+import android.content.Context
+import android.content.BroadcastReceiver
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.KeyEvent
@@ -94,6 +100,13 @@ abstract class BaseGameActivity : ImmersiveActivity() {
         setUpExceptionsHandler()
         GameService.startService(applicationContext, intent)
         game = intent.getSerializableExtra(EXTRA_GAME) as Game
+        GameProcessController.markRunning(applicationContext, game.id)
+        ContextCompat.registerReceiver(
+            this,
+            stopRequestReceiver,
+            IntentFilter(GameProcessController.ACTION_STOP_GAME),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         systemCoreConfig = intent.getSerializableExtra(EXTRA_SYSTEM_CORE_CONFIG) as SystemCoreConfig
         system = GameSystem.findById(game.systemId)
 
@@ -310,6 +323,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     private fun performUnexpectedErrorFinish(exception: Throwable) {
         Timber.e(exception, "Handling java exception in BaseGameActivity")
+        showCrashDialog(getString(R.string.lemuroid_crash_disclamer), exception.message)
         val resultIntent =
             Intent().apply {
                 putExtra(PLAY_GAME_RESULT_ERROR, exception.message)
@@ -320,6 +334,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     private fun performErrorFinish(message: String) {
+        showCrashDialog(message, null)
         val resultIntent =
             Intent().apply {
                 putExtra(PLAY_GAME_RESULT_ERROR, message)
@@ -327,6 +342,13 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
         setResult(RESULT_ERROR, resultIntent)
         finishAndExitProcess()
+    }
+
+    private fun showCrashDialog(
+        message: String,
+        detail: String?,
+    ) {
+        runCatching { GameCrashActivity.launch(this, message, detail) }
     }
 
     private fun finishAndExitProcess() {
@@ -351,11 +373,23 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     }
 
     override fun onDestroy() {
+        runCatching { unregisterReceiver(stopRequestReceiver) }
         if (!isChangingConfigurations) {
+            GameProcessController.clearRunning(applicationContext)
             GameService.requestTermination()
         }
         super.onDestroy()
     }
+
+    private val stopRequestReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(
+                context: Context?,
+                intent: Intent?,
+            ) {
+                baseGameScreenViewModel.requestFinish()
+            }
+        }
 
     override fun onActivityResult(
         requestCode: Int,
@@ -452,6 +486,9 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                     putExtra(EXTRA_LOAD_SAVE, loadSave)
                     putExtra(EXTRA_LEANBACK, useLeanback)
                     putExtra(EXTRA_SYSTEM_CORE_CONFIG, systemCoreConfig)
+                    // Games run in their own task so a Home press backgrounds them instead of
+                    // clearing them when Lemuroid itself is the home screen.
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 },
                 REQUEST_PLAY_GAME,
             )
