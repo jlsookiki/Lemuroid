@@ -25,6 +25,10 @@ class GameLauncher(
         val appContext = activity.applicationContext
         val runningGameId = GameProcessController.runningGameId(appContext)
         val resumeRunningGame = runningGameId == game.id && loadSave
+        android.util.Log.d(
+            "GameProcessController",
+            "launch requested game=${game.id} running=$runningGameId resume=$resumeRunningGame",
+        )
 
         GlobalScope.launch {
             if (!resumeRunningGame && GameProcessController.isGameRunning(appContext)) {

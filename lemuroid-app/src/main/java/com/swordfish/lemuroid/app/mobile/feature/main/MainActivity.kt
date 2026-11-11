@@ -150,7 +150,19 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
         setContent {
             val navController = rememberNavController()
+            mainNavController = navController
             MainScreen(navController)
+        }
+    }
+
+    private var mainNavController: NavHostController? = null
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        // The Home key re-delivers the launcher intent to this single-task activity. Treat it like a
+        // console's home button: back to the Library, whatever page was open.
+        if (intent?.hasCategory(Intent.CATEGORY_HOME) == true) {
+            mainNavController?.popBackStack(MainRoute.LIBRARY.route, inclusive = false)
         }
     }
 
