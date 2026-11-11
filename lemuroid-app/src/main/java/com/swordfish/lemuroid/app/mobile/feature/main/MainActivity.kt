@@ -32,6 +32,7 @@ import com.swordfish.lemuroid.app.mobile.feature.favorites.FavoritesScreen
 import com.swordfish.lemuroid.app.mobile.feature.favorites.FavoritesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesScreen
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesViewModel
+import com.swordfish.lemuroid.app.mobile.feature.apps.AppsScreen
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
 import com.swordfish.lemuroid.app.mobile.feature.library.LibraryScreen
 import com.swordfish.lemuroid.app.mobile.feature.library.LibraryViewModel
@@ -214,6 +215,9 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                             onGameClick = onGameClick,
                             onGameLongClick = onGameLongClick,
                         )
+                    }
+                    composable(MainRoute.APPS) {
+                        AppsScreen(modifier = Modifier.padding(padding))
                     }
                     composable(MainRoute.HOME) {
                         HomeScreen(

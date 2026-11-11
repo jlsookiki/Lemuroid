@@ -41,6 +41,12 @@ enum class MainRoute(
         titleId = R.string.title_library,
         showBottomNavigation = false,
     ),
+    APPS(
+        route = "apps",
+        titleId = R.string.title_apps,
+        parent = LIBRARY,
+        showBottomNavigation = false,
+    ),
     HOME(
         route = "home",
         titleId = R.string.title_home,

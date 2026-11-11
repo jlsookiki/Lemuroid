@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
@@ -155,6 +156,14 @@ fun LemuroidTopBarActions(
             }
         }
         if (route == MainRoute.LIBRARY) {
+            IconButton(
+                onClick = { navController.navigate(MainRoute.APPS.route) },
+            ) {
+                Icon(
+                    Icons.Outlined.Apps,
+                    stringResource(R.string.title_apps),
+                )
+            }
             IconButton(
                 onClick = { navController.navigate(MainRoute.SEARCH.route) },
             ) {
