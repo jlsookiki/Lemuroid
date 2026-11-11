@@ -387,6 +387,8 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 context: Context?,
                 intent: Intent?,
             ) {
+                Timber.i("Stop requested by the launcher, saving and finishing")
+                android.util.Log.d("GameProcessController", "stop request received by the game")
                 baseGameScreenViewModel.requestFinish()
             }
         }
