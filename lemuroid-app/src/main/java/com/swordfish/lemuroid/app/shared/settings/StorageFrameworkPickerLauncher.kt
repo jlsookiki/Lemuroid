@@ -24,6 +24,7 @@ class StorageFrameworkPickerLauncher : RetrogradeActivity() {
             val intent =
                 Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     this.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    this.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     this.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                     this.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
                     this.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
@@ -56,12 +57,16 @@ class StorageFrameworkPickerLauncher : RetrogradeActivity() {
             val currentValue: String? = sharedPreferences.getString(preferenceKey, null)
             val newValue = resultData?.data
 
-            if (newValue != null && newValue.toString() != currentValue) {
+            if (newValue != null) {
+                // Always re-take the grant: picking the same folder again is how an older,
+                // read-only grant gets upgraded to read and write.
                 updatePersistableUris(newValue)
 
-                sharedPreferences.edit().apply {
-                    this.putString(preferenceKey, newValue.toString())
-                    this.apply()
+                if (newValue.toString() != currentValue) {
+                    sharedPreferences.edit().apply {
+                        this.putString(preferenceKey, newValue.toString())
+                        this.apply()
+                    }
                 }
             }
 
@@ -72,16 +77,17 @@ class StorageFrameworkPickerLauncher : RetrogradeActivity() {
 
     private fun updatePersistableUris(uri: Uri) {
         contentResolver.persistedUriPermissions
-            .filter { it.isReadPermission }
             .filter { it.uri != uri }
-            .forEach {
-                contentResolver.releasePersistableUriPermission(
-                    it.uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                )
+            .forEach { permission ->
+                var flags = 0
+                if (permission.isReadPermission) flags = flags or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                if (permission.isWritePermission) flags = flags or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                runCatching { contentResolver.releasePersistableUriPermission(permission.uri, flags) }
             }
 
-        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val readWrite = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        runCatching { contentResolver.takePersistableUriPermission(uri, readWrite) }
+            .onFailure { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
     }
 
     private fun startLibraryIndexWork() {

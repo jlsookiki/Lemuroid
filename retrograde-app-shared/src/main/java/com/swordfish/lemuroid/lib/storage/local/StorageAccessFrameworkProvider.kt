@@ -26,6 +26,7 @@ import java.io.InputStream
 import java.util.zip.ZipInputStream
 
 class StorageAccessFrameworkProvider(private val context: Context) : StorageProvider {
+
     override val id: String = "access_framework"
 
     override val name: String = context.getString(R.string.local_storage)
@@ -84,6 +85,7 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
         val resolver = context.contentResolver
 
         return runCatching {
+            android.util.Log.d(SIBLING_TAG, "writeSibling doc=$documentId path=$relativePath")
             var directoryId = parentDocumentId(documentId)
             val parts = relativePath.split('/').filter { it.isNotEmpty() }
             for (directory in parts.dropLast(1)) {
@@ -114,9 +116,10 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
                     ) ?: return false
                 }
 
+            android.util.Log.d(SIBLING_TAG, "writing ${data.size} bytes to $fileUri")
             resolver.openOutputStream(fileUri, "wt")?.use { it.write(data) } ?: return false
             true
-        }.getOrDefault(false)
+        }.onFailure { android.util.Log.e(SIBLING_TAG, "writeSibling failed", it) }.getOrDefault(false)
     }
 
     private fun siblingUri(
@@ -338,6 +341,7 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
     }
 
     companion object {
+        private const val SIBLING_TAG = "LemuroidSibling"
         const val SAF_CACHE_SUBFOLDER = "storage-framework-games"
         const val VIRTUAL_FILE_PATH = "/virtual/file/path"
     }

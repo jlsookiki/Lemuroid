@@ -135,7 +135,12 @@ class GameDetailsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             uiState.value = uiState.value.copy(busy = true)
             val coreConfig = coresSelection.getCoreConfigForSystem(GameSystem.findById(game.systemId))
-            val succeeded = runCatching { action(game, coreConfig) }.getOrElse { Timber.e(it); false }
+            val succeeded =
+                runCatching { action(game, coreConfig) }
+                    .getOrElse {
+                        android.util.Log.e("LemuroidSibling", "game action failed", it)
+                        false
+                    }
             val refreshed = runCatching { loadState() }.getOrDefault(uiState.value)
             uiState.value = refreshed.copy(busy = false, message = if (succeeded) MESSAGE_DONE else MESSAGE_FAILED)
         }
