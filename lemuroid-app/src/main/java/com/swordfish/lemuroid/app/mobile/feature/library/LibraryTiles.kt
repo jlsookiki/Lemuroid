@@ -42,9 +42,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LemuroidGameImage
+import com.swordfish.lemuroid.app.mobile.shared.compose.ui.RetryingAsyncImage
 import com.swordfish.lemuroid.app.utils.games.GameUtils
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 
@@ -132,7 +132,7 @@ fun HeroBanner(
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {
-        AsyncImage(
+        RetryingAsyncImage(
             model = game.coverFrontUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
