@@ -21,6 +21,19 @@ class GameLaunchTaskHandler(
         cancelBackgroundWork(context)
     }
 
+    /**
+     * Stamp the game as played when it starts, not only when it exits cleanly. Leaving a game
+     * with the Home button never produces an activity result, so the recents row would otherwise
+     * stay empty for anyone who relies on automatic resume.
+     */
+    suspend fun handleGameStart(
+        context: Context,
+        game: Game,
+    ) {
+        handleGameStart(context)
+        updateGamePlayedTimestamp(game)
+    }
+
     suspend fun handleGameFinish(
         enableRatingFlow: Boolean,
         activity: Activity,
