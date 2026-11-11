@@ -46,6 +46,19 @@ interface StorageProvider {
     /** Returns a cover image stored next to the game (see LocalCovers), if any. */
     fun findLocalCover(baseStorageFile: BaseStorageFile): Uri? = null
 
+    /** Opens a file stored relative to the game's own folder, e.g. "gamelist.xml" or "saves/x.srm". */
+    fun openSibling(
+        game: Game,
+        relativePath: String,
+    ): InputStream? = null
+
+    /** Writes a file relative to the game's own folder, creating intermediate folders. */
+    fun writeSibling(
+        game: Game,
+        relativePath: String,
+        data: ByteArray,
+    ): Boolean = false
+
     fun getGameRomFiles(
         game: Game,
         dataFiles: List<DataFile>,

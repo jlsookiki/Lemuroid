@@ -62,6 +62,29 @@ class LocalStorageProvider(
         return DocumentFileParser.parseDocumentFile(context, baseStorageFile)
     }
 
+    override fun openSibling(
+        game: Game,
+        relativePath: String,
+    ): InputStream? {
+        val parent = Uri.parse(game.fileUri).path?.let { File(it).parentFile } ?: return null
+        val file = File(parent, relativePath)
+        return if (file.isFile) file.inputStream() else null
+    }
+
+    override fun writeSibling(
+        game: Game,
+        relativePath: String,
+        data: ByteArray,
+    ): Boolean {
+        val parent = Uri.parse(game.fileUri).path?.let { File(it).parentFile } ?: return false
+        val file = File(parent, relativePath)
+        return runCatching {
+            file.parentFile?.mkdirs()
+            file.writeBytes(data)
+            true
+        }.getOrDefault(false)
+    }
+
     override fun findLocalCover(baseStorageFile: BaseStorageFile): Uri? {
         val parent = baseStorageFile.uri.path?.let { File(it).parentFile } ?: return null
         return LocalCovers.candidateRelativePaths(baseStorageFile.extensionlessName)

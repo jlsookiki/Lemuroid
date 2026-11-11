@@ -36,6 +36,7 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
     viewModel: LibraryViewModel,
     onGameClick: (Game) -> Unit,
+    onGamePlay: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
 ) {
     val context = LocalContext.current
@@ -46,6 +47,7 @@ fun LibraryScreen(
         state = state,
         onFilterSelected = { viewModel.setFilter(it) },
         onGameClick = onGameClick,
+        onGamePlay = onGamePlay,
         onGameLongClick = onGameLongClick,
         onSetDirectoryClicked = { viewModel.changeLocalStorageFolder(context) },
     )
@@ -57,6 +59,7 @@ private fun LibraryScreen(
     state: LibraryViewModel.UIState,
     onFilterSelected: (LibraryViewModel.Filter) -> Unit,
     onGameClick: (Game) -> Unit,
+    onGamePlay: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
     onSetDirectoryClicked: () -> Unit,
 ) {
@@ -83,6 +86,7 @@ private fun LibraryScreen(
         LibraryGrid(
             state = state,
             onGameClick = onGameClick,
+            onGamePlay = onGamePlay,
             onGameLongClick = onGameLongClick,
         )
     }
@@ -132,6 +136,7 @@ private fun FilterRow(
 private fun LibraryGrid(
     state: LibraryViewModel.UIState,
     onGameClick: (Game) -> Unit,
+    onGamePlay: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
 ) {
     val heroGame =
@@ -151,6 +156,7 @@ private fun LibraryGrid(
                     modifier = Modifier.padding(bottom = 8.dp),
                     game = heroGame,
                     onClick = { onGameClick(heroGame) },
+                    onResume = { onGamePlay(heroGame) },
                     onLongClick = { onGameLongClick(heroGame) },
                 )
             }

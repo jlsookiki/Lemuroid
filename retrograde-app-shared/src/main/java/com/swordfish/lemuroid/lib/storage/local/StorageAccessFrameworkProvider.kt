@@ -65,6 +65,84 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
             .firstOrNull { documentExists(it) }
     }
 
+    override fun openSibling(
+        game: Game,
+        relativePath: String,
+    ): InputStream? {
+        val uri = siblingUri(game, relativePath) ?: return null
+        if (!documentExists(uri)) return null
+        return runCatching { context.contentResolver.openInputStream(uri) }.getOrNull()
+    }
+
+    override fun writeSibling(
+        game: Game,
+        relativePath: String,
+        data: ByteArray,
+    ): Boolean {
+        val treeUri = getExternalFolder()?.let { Uri.parse(it) } ?: return false
+        val documentId = runCatching { DocumentsContract.getDocumentId(Uri.parse(game.fileUri)) }.getOrNull() ?: return false
+        val resolver = context.contentResolver
+
+        return runCatching {
+            var directoryId = parentDocumentId(documentId)
+            val parts = relativePath.split('/').filter { it.isNotEmpty() }
+            for (directory in parts.dropLast(1)) {
+                val childId = joinDocumentId(directoryId, directory)
+                if (!documentExists(DocumentsContract.buildDocumentUriUsingTree(treeUri, childId))) {
+                    DocumentsContract.createDocument(
+                        resolver,
+                        DocumentsContract.buildDocumentUriUsingTree(treeUri, directoryId),
+                        DocumentsContract.Document.MIME_TYPE_DIR,
+                        directory,
+                    ) ?: return false
+                }
+                directoryId = childId
+            }
+
+            val fileName = parts.last()
+            val fileId = joinDocumentId(directoryId, fileName)
+            val existingUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, fileId)
+            val fileUri =
+                if (documentExists(existingUri)) {
+                    existingUri
+                } else {
+                    DocumentsContract.createDocument(
+                        resolver,
+                        DocumentsContract.buildDocumentUriUsingTree(treeUri, directoryId),
+                        "application/octet-stream",
+                        fileName,
+                    ) ?: return false
+                }
+
+            resolver.openOutputStream(fileUri, "wt")?.use { it.write(data) } ?: return false
+            true
+        }.getOrDefault(false)
+    }
+
+    private fun siblingUri(
+        game: Game,
+        relativePath: String,
+    ): Uri? {
+        val treeUri = getExternalFolder()?.let { Uri.parse(it) } ?: return null
+        val documentId = runCatching { DocumentsContract.getDocumentId(Uri.parse(game.fileUri)) }.getOrNull() ?: return null
+        var id = parentDocumentId(documentId)
+        relativePath.split('/').filter { it.isNotEmpty() }.forEach { id = joinDocumentId(id, it) }
+        return DocumentsContract.buildDocumentUriUsingTree(treeUri, id)
+    }
+
+    /** "primary:ROMs/gba/Game.gba" -> "primary:ROMs/gba"; "primary:Game.gba" -> "primary:" */
+    private fun parentDocumentId(documentId: String): String {
+        val separator = documentId.lastIndexOf('/')
+        return if (separator >= 0) documentId.substring(0, separator) else documentId.substringBefore(':') + ":"
+    }
+
+    private fun joinDocumentId(
+        parent: String,
+        child: String,
+    ): String {
+        return if (parent.endsWith(":")) parent + child else "$parent/$child"
+    }
+
     private fun documentExists(uri: Uri): Boolean {
         val projection = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
         return runCatching {

@@ -33,6 +33,8 @@ import com.swordfish.lemuroid.app.mobile.feature.favorites.FavoritesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesScreen
 import com.swordfish.lemuroid.app.mobile.feature.games.GamesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.apps.AppsScreen
+import com.swordfish.lemuroid.app.mobile.feature.gamedetails.GameDetailsScreen
+import com.swordfish.lemuroid.app.mobile.feature.gamedetails.GameDetailsViewModel
 import com.swordfish.lemuroid.app.mobile.feature.home.HomeScreen
 import com.swordfish.lemuroid.app.mobile.feature.library.LibraryScreen
 import com.swordfish.lemuroid.app.mobile.feature.library.LibraryViewModel
@@ -79,6 +81,11 @@ import dagger.Provides
 import de.charlex.compose.material3.HtmlText
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import com.swordfish.lemuroid.lib.saves.StatesManager
+import com.swordfish.lemuroid.lib.saves.SavesManager
+import com.swordfish.lemuroid.lib.saves.StatesPreviewManager
+import com.swordfish.lemuroid.lib.storage.StorageProviderRegistry
+import dagger.Lazy
 import javax.inject.Inject
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -106,6 +113,18 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
 
     @Inject
     lateinit var inputDeviceManager: InputDeviceManager
+
+    @Inject
+    lateinit var statesManager: StatesManager
+
+    @Inject
+    lateinit var savesManager: SavesManager
+
+    @Inject
+    lateinit var statesPreviewManager: StatesPreviewManager
+
+    @Inject
+    lateinit var storageProviderRegistry: Lazy<StorageProviderRegistry>
 
     private val reviewManager = ReviewManager()
 
@@ -212,8 +231,31 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                                 viewModel(
                                     factory = LibraryViewModel.Factory(applicationContext, retrogradeDb),
                                 ),
-                            onGameClick = onGameClick,
+                            onGameClick = { game -> navController.navigateToGame(game.id) },
+                            onGamePlay = onGameClick,
                             onGameLongClick = onGameLongClick,
+                        )
+                    }
+                    composable(MainRoute.GAME) { entry ->
+                        val gameId = entry.arguments?.getInt("gameId") ?: return@composable
+                        GameDetailsScreen(
+                            modifier = Modifier.padding(padding),
+                            viewModel =
+                                viewModel(
+                                    factory =
+                                        GameDetailsViewModel.Factory(
+                                            applicationContext,
+                                            gameId,
+                                            retrogradeDb,
+                                            storageProviderRegistry,
+                                            coresSelection,
+                                            statesManager,
+                                            savesManager,
+                                            statesPreviewManager,
+                                        ),
+                                ),
+                            onGamePlay = onGameClick,
+                            onGameRestart = { game -> gameInteractor.onGameRestart(game) },
                         )
                     }
                     composable(MainRoute.APPS) {

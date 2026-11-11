@@ -29,6 +29,10 @@ fun NavController.navigateToRoute(route: MainRoute) {
     this.navigate(route.route)
 }
 
+fun NavController.navigateToGame(gameId: Int) {
+    this.navigate("game/$gameId")
+}
+
 enum class MainRoute(
     val route: String,
     @StringRes val titleId: Int,
@@ -39,6 +43,13 @@ enum class MainRoute(
     LIBRARY(
         route = "library",
         titleId = R.string.title_library,
+        showBottomNavigation = false,
+    ),
+    GAME(
+        route = "game/{gameId}",
+        titleId = R.string.title_game,
+        parent = LIBRARY,
+        arguments = listOf(navArgument("gameId") { type = NavType.IntType }),
         showBottomNavigation = false,
     ),
     APPS(

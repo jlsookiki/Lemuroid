@@ -113,6 +113,7 @@ fun HeroBanner(
     modifier: Modifier = Modifier,
     game: Game,
     onClick: () -> Unit,
+    onResume: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -189,7 +190,7 @@ fun HeroBanner(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = onClick) {
+                Button(onClick = onResume) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.library_resume))
