@@ -1,3 +1,47 @@
+# Lemuroid, handheld-console edition
+
+A fork of [Lemuroid](https://github.com/Swordfish90/Lemuroid) that turns an Android gaming handheld into something closer to a Steam Deck: one library, covers for everything, automatic resume, and no Android home screen in the way. Built and used on an Anbernic RG406V, should work on any Android 6+ device with a gamepad.
+
+## What's different from upstream
+
+- **One library.** Every game in a single cover grid with filter chips for All, Favorites and each system. A "Continue playing" banner at the top for the last game played. Dark, fixed Steam-style palette. D-pad focus scales tiles and draws a ring, so it reads right on a controller.
+- **Local cover art.** Drop `Game Name.png` (or jpg/webp) next to the ROM, or in a `media`, `covers` or `images` subfolder, and it overrides the Libretro thumbnail. Works for ROM hacks and anything the thumbnail servers don't know.
+- **Game page.** Select a tile to get a page with the cover, description, developer, year and genre, read from an EmulationStation-style `gamelist.xml` or a `Game Name.txt` beside the ROM. Resume, Restart and Favorite live there too.
+- **Saves you can see.** The game page has a Saves tab: export and import the battery save to `saves/` beside the ROM, see the automatic resume point and the four state slots with screenshots, and pick any slot as the resume point.
+- **Named save profiles.** Several battery saves per game, stored as plain files next to the ROM (`saves/Game.srm`, `saves/Game.<profile>.srm`). The active profile is mirrored out at every launch.
+- **Can be the home screen.** Lemuroid registers as an Android launcher. Set it as home and the device boots straight into the library. An Apps drawer in the top bar keeps every other app reachable. Games run in their own task, so the Home button backgrounds a game with an automatic save, and starting a different game saves and quits the first one.
+
+Not included: RetroAchievements. Upstream Lemuroid has no support for it and adding it means work in the native emulation layer, so the tab is a placeholder.
+
+## Install
+
+1. Download the APK from the [Releases](../../releases) page and install it. It is signed with a different key than the F-Droid and Play builds, so uninstall those first.
+2. Open it, choose your ROMs folder. Pick the folder even if you have used Lemuroid before: this build needs write access to it for save export.
+3. Optional, to make it the home screen: Android Settings → Apps → Default apps → Home app → Lemuroid. On a device without a lock screen it will boot straight into the library.
+
+Covers and descriptions are plain files beside your ROMs, for example:
+
+```
+ROMs/gba/Pokemon Unbound.gba
+ROMs/gba/media/Pokemon Unbound.png
+ROMs/gba/gamelist.xml
+ROMs/gba/saves/Pokemon Unbound.srm
+```
+
+## Building
+
+Standard Android build. Release signing expects `release.jks` at the repo root with alias and passwords `lemuroid`; generate your own with `keytool`.
+
+```
+./gradlew :lemuroid-app:assembleFreeDynamicRelease
+```
+
+## Credits and license
+
+All the emulation is Lemuroid and LibretroDroid by Swordfish90 and the Libretro cores. This fork only changes the front end. GPL-3.0, same as upstream. The original README follows.
+
+---
+
 # Lemuroid
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
