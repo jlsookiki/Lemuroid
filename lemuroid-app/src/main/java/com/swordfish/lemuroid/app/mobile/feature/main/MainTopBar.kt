@@ -100,7 +100,7 @@ fun LemuroidTopAppBar(
             ),
         navigationIcon = {
             AnimatedVisibility(
-                visible = route.parent != null,
+                visible = route.parent != null || route == MainRoute.SEARCH,
                 enter = fadeIn(),
                 exit = fadeOut(),
             ) {
@@ -154,7 +154,17 @@ fun LemuroidTopBarActions(
                 )
             }
         }
-        if (route.showBottomNavigation) {
+        if (route == MainRoute.LIBRARY) {
+            IconButton(
+                onClick = { navController.navigate(MainRoute.SEARCH.route) },
+            ) {
+                Icon(
+                    Icons.Default.Search,
+                    stringResource(R.string.title_search),
+                )
+            }
+        }
+        if (route.showBottomNavigation || route == MainRoute.LIBRARY) {
             IconButton(
                 onClick = { navController.navigate(MainRoute.SETTINGS.route) },
             ) {

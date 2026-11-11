@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -29,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LemuroidEmptyView
-import com.swordfish.lemuroid.app.mobile.shared.compose.ui.LemuroidGameCard
 import com.swordfish.lemuroid.app.shared.systems.MetaSystemInfo
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 
@@ -136,21 +134,24 @@ private fun LibraryGrid(
     onGameClick: (Game) -> Unit,
     onGameLongClick: (Game) -> Unit,
 ) {
-    val showRecents = state.filter is LibraryViewModel.Filter.All && state.recentGames.isNotEmpty()
+    val heroGame =
+        state.recentGames.firstOrNull()
+            ?.takeIf { state.filter is LibraryViewModel.Filter.All }
 
     LazyVerticalGrid(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        columns = GridCells.Adaptive(150.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+        columns = GridCells.Adaptive(132.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (showRecents) {
-            item(key = "recents", span = { GridItemSpan(maxLineSpan) }) {
-                RecentsRow(
-                    games = state.recentGames,
-                    onGameClick = onGameClick,
-                    onGameLongClick = onGameLongClick,
+        if (heroGame != null) {
+            item(key = "hero", span = { GridItemSpan(maxLineSpan) }) {
+                HeroBanner(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    game = heroGame,
+                    onClick = { onGameClick(heroGame) },
+                    onLongClick = { onGameLongClick(heroGame) },
                 )
             }
             item(key = "all-title", span = { GridItemSpan(maxLineSpan) }) {
@@ -159,7 +160,7 @@ private fun LibraryGrid(
         }
         items(state.games.size, key = { state.games[it].id }) { index ->
             val game = state.games[index]
-            LemuroidGameCard(
+            SteamGameTile(
                 modifier = Modifier.animateItem(),
                 game = game,
                 onClick = { onGameClick(game) },
@@ -169,41 +170,12 @@ private fun LibraryGrid(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun RecentsRow(
-    games: List<Game>,
-    onGameClick: (Game) -> Unit,
-    onGameLongClick: (Game) -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.library_continue_playing))
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 8.dp),
-        ) {
-            items(games.size, key = { games[it].id }) { index ->
-                val game = games[index]
-                LemuroidGameCard(
-                    modifier =
-                        Modifier
-                            .widthIn(0.dp, 150.dp)
-                            .animateItem(),
-                    game = game,
-                    onClick = { onGameClick(game) },
-                    onLongClick = { onGameLongClick(game) },
-                )
-            }
-        }
-    }
-}
-
 @Composable
 private fun SectionTitle(text: String) {
     Text(
-        text = text,
+        text = text.uppercase(),
         style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 

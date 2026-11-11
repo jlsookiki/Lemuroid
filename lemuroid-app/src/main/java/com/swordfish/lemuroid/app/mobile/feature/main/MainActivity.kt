@@ -7,6 +7,8 @@ import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -116,6 +118,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             SystemBarStyle.dark(Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        hideSystemBars()
 
         GlobalScope.safeLaunch {
             reviewManager.initialize(applicationContext)
@@ -125,6 +128,17 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
             val navController = rememberNavController()
             MainScreen(navController)
         }
+    }
+
+    private fun hideSystemBars() {
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
     }
 
     @OptIn(ExperimentalMaterial3Api::class)

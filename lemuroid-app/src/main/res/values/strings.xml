@@ -4,6 +4,7 @@
     <string name="library_filter_all">All</string>
     <string name="library_all_games">All games</string>
     <string name="library_continue_playing">Continue playing</string>
+    <string name="library_resume">Resume</string>
     <string name="title_search">Search</string>
     <string name="title_systems">Systems</string>
     <string name="title_games">Games</string>

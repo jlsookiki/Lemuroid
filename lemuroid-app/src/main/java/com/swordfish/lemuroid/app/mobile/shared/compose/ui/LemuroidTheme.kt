@@ -1,13 +1,10 @@
 package com.swordfish.lemuroid.app.mobile.shared.compose.ui
 
-import android.os.Build
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme =
     lightColorScheme(
@@ -75,21 +72,41 @@ private val DarkColorScheme =
         scrim = md_theme_dark_scrim,
     )
 
+private val SteamColorScheme =
+    darkColorScheme(
+        primary = Color(0xFF66C0F4),
+        onPrimary = Color(0xFF0E141B),
+        primaryContainer = Color(0xFF1A9FFF),
+        onPrimaryContainer = Color(0xFFFFFFFF),
+        secondary = Color(0xFF1A9FFF),
+        onSecondary = Color(0xFFFFFFFF),
+        secondaryContainer = Color(0xFF1A9FFF),
+        onSecondaryContainer = Color(0xFFFFFFFF),
+        tertiary = Color(0xFF8BC53F),
+        onTertiary = Color(0xFF0E141B),
+        background = Color(0xFF171D25),
+        onBackground = Color(0xFFDCE4EC),
+        surface = Color(0xFF171D25),
+        onSurface = Color(0xFFDCE4EC),
+        surfaceVariant = Color(0xFF243447),
+        onSurfaceVariant = Color(0xFF8F98A0),
+        surfaceContainer = Color(0xFF1B2838),
+        surfaceContainerHigh = Color(0xFF223246),
+        surfaceContainerHighest = Color(0xFF2A475E),
+        surfaceContainerLow = Color(0xFF151B22),
+        surfaceContainerLowest = Color(0xFF0E141B),
+        outline = Color(0xFF3D4F60),
+        outlineVariant = Color(0xFF2A3A4A),
+        scrim = Color(0xFF000000),
+    )
+
 @Composable
 fun AppTheme(
     darkTheme: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val colors =
-        when {
-            dynamicColor && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-            dynamicColor && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
-            darkTheme -> DarkColorScheme
-            else -> LightColorScheme
-        }
-
-    MaterialTheme(colorScheme = colors) {
+    // Steam-like fixed palette: the library should look the same regardless of wallpaper.
+    MaterialTheme(colorScheme = SteamColorScheme) {
         content()
     }
 }

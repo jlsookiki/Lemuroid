@@ -39,6 +39,7 @@ enum class MainRoute(
     LIBRARY(
         route = "library",
         titleId = R.string.title_library,
+        showBottomNavigation = false,
     ),
     HOME(
         route = "home",
@@ -51,6 +52,7 @@ enum class MainRoute(
     SEARCH(
         route = "search",
         titleId = R.string.title_search,
+        showBottomNavigation = false,
     ),
     SYSTEMS(
         route = "systems/home",
